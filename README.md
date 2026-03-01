@@ -1,63 +1,237 @@
-# Claude Skills
+# 🧹 disk-clean · AI 磁盘深度清理助手
 
-A collection of custom skills for [Claude Code](https://claude.ai/code).
-
-## Skills
-
-### disk-clean - Disk Deep Clean Assistant
-
-A smart disk cleanup skill that works on both **Windows** and **macOS**.
-
-**Trigger phrases** (say any of these in Claude Code):
-
-> 清理磁盘 / 清理C盘 / 磁盘空间不够 / 空间不足 / 硬盘满了 / disk clean / 盘快满了
-
-**What it does:**
-
-- Auto-detects your OS (Windows / macOS), no questions asked
-- Dynamically scans your machine for cleanable caches
-- Covers: system temp, browsers, IM apps (WeChat, QQ, DingTalk, Slack, Teams...), dev tools (npm, pip, gradle...), and more
-- Shows a categorized, size-sorted list before touching anything
-- Merges all admin/UAC prompts into one single pop-up
-- Never touches: chat history, received files, bookmarks, passwords, Desktop, Documents
-
-After each run, the skill logs cleanup history and learns your preferences for next time.
+> 对 Claude Code 说一句话，AI 自动扫描全盘缓存、列出分类清单、合并授权弹窗、一键清理到底。
+> 支持 **Windows + macOS**，聊天记录 / 书签 / 密码全程不动。
 
 ---
 
-## Installation
+## 效果预览
 
-Copy any `.md` file from this repo into your Claude Code commands directory:
+下面是一次完整的清理过程（Windows 示例）：
 
-**Windows:**
 ```
-C:\Users\<YourName>\.claude\commands\
-```
+你：  磁盘快满了，帮我清理一下
 
-**macOS / Linux:**
-```
-~/.claude/commands/
-```
+Claude：正在扫描，请稍候…
 
-Then restart Claude Code. The skill is ready to use.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 扫描完成  |  C盘剩余 28 GB / 共 256 GB
+   可清理（默认全选）：约 6.3 GB
+   ⚠ 微信正在运行，关闭后对应项自动继续
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🟢 默认全部清理（输入编号可排除）
+
+━━━ A. 系统缓存 ━━━
+  A1. 系统临时文件        1.2 GB   ⚑ 需管理员
+  A2. Windows 更新缓存    890 MB   ⚑ 需管理员
+  A3. 缩略图缓存           230 MB
+
+━━━ B. 浏览器缓存 ━━━
+  B1. Chrome 主缓存        640 MB   书签/密码/历史完全不受影响
+  B2. Edge 主缓存          380 MB   书签/密码/历史完全不受影响
+  B3. Chrome ServiceWorker 210 MB
+
+━━━ C. 即时通讯 ━━━
+  C1. 微信缓存             1.1 GB   ✱ 需关闭微信
+  C2. 企业微信缓存          540 MB   ✱ 需关闭企业微信
+
+━━━ D. 其他应用 ━━━
+  D1. 百度网盘缓存          380 MB
+  D2. Spotify 缓存          210 MB
+
+━━━ E. 开发工具 ━━━
+  E1. npm 缓存             620 MB
+  E2. pip 缓存             140 MB
+
+🟡 可选项（默认不选，输入 +F1 添加）
+
+━━━ F. 可选 ━━━
+  F1. 休眠文件 hiberfil.sys   8.0 GB   ⚑ 需管理员  ⚠ 关闭后无法从休眠状态唤醒
+  F2. Package Cache           1.2 GB   ⚑ 需管理员  ⚠ 删除后已安装软件无法修复/卸载
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ 绝对不会清理：聊天记录、收到的文件、书签密码、桌面/文档
+
+━━━ 授权汇总（确认后一次性处理）━━━
+  ⚑ 需管理员：A1 A2  →  Windows 弹一次 UAC
+  ✱ 需关闭：微信、企业微信（对应 C1 C2）→ 关闭后自动继续
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  [ 全部执行（推荐） ]   [ 自定义 ]
+
+─ ─ ─ ─ ─ ─ ─ ─ ─ ─（用户选「全部执行」）─ ─ ─ ─ ─ ─ ─ ─ ─ ─
+
+  ✓ A3  缩略图缓存           释放  230 MB
+  ✓ B1  Chrome 主缓存        释放  640 MB
+  ✓ B2  Edge 主缓存          释放  380 MB
+  ✓ B3  Chrome SW 缓存       释放  210 MB
+  ✓ D1  百度网盘缓存          释放  380 MB
+  ✓ D2  Spotify 缓存         释放  210 MB
+  ✓ E1  npm 缓存             释放  620 MB
+  ✓ E2  pip 缓存             释放  140 MB
+  ⚑  管理员脚本执行中…（弹出一次 UAC）
+  ✓ A1  系统临时文件          释放  1.2 GB
+  ✓ A2  Windows 更新缓存     释放  890 MB
+  ⏳ 等待微信关闭…
+  ✓ C1  微信缓存              释放  1.1 GB
+  ✓ C2  企业微信缓存          释放  540 MB
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ 清理完成
+释放空间：6.3 GB
+磁盘变化：228 GB → 221 GB（+6.3 GB）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
 
 ---
 
-## Usage Example
+## 工作原理
 
 ```
-You:     磁盘快满了帮我清理一下
-Claude:  正在扫描，请稍候…
-         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-         📊 扫描完成 | C盘剩余 28 GB / 共 256 GB
-            可清理：约 4.7 GB
-         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-         A1. 系统临时文件     1.2 GB
-         B1. Chrome缓存       800 MB
-         C1. 微信缓存         600 MB
-         ...
-         [一次确认 → 自动清理 → 汇报结果]
+  你说一句话
+       │
+       ▼
+  自动识别系统（Windows / macOS）
+       │
+       ▼
+  动态扫描全盘缓存
+  ┌──────────────────────────────────────────────────┐
+  │  • 只报告实际存在且 > 1 MB 的目录               │
+  │  • 不预设软件清单，没装的软件不会出现            │
+  │  • 覆盖系统、浏览器、IM、云存储、开发工具        │
+  └──────────────────────────────────────────────────┘
+       │
+       ▼
+  展示分类清单（A–F，每类按大小降序）
+  合并所有授权需求，提示 ⚑ 和 ✱ 项
+       │
+       ▼
+  ┌── 一次用户确认 ────────────────────────────────┐
+  │  全部执行（推荐）                               │
+  │  自定义：C1 C2 排除 / +F1 添加 / -A3 跳过授权  │
+  └────────────────────────────────────────────────┘
+       │
+       ├──▶ 无需权限的项目：立即并行清理
+       │
+       ├──▶ 需管理员的所有项：合并为一次 UAC / 密码框
+       │
+       └──▶ 需关闭应用的项：等进程退出后批量继续
+       │
+       ▼
+  实时输出每项释放量
+       │
+       ▼
+  汇报总量 + 针对性优化建议
+  记录到记忆文件（下次触发时提示距上次时间）
 ```
+
+---
+
+## 覆盖范围
+
+| 类别 | 涵盖内容 |
+|:----:|---------|
+| 🖥 **系统缓存** | 用户/系统临时文件 · Windows Update 缓存 · CBS 日志 · 缩略图 · INetCache · 错误报告 · Prefetch · Minidump |
+| 🌐 **浏览器** | Chrome · Edge · Firefox · Brave · Opera · Vivaldi · Arc · 360浏览器 · QQ浏览器<br>（主缓存 + ServiceWorker + CodeCache，每种浏览器独立检测） |
+| 💬 **即时通讯** | 微信 · 企业微信 · QQ · 腾讯会议 · 飞书 · 钉钉 · Teams · Slack · Discord · Zoom · Telegram · Skype |
+| ☁️ **其他应用** | 百度网盘 · OneDrive · Dropbox · 坚果云 · Spotify · Steam · Epic Games |
+| 🔧 **开发工具** | npm · pip · Yarn · pnpm · Gradle · Maven · VSCode · Cursor · JetBrains · Docker · NVIDIA 着色器缓存 · D3D 缓存 |
+| ⚠️ **可选大项** | 休眠文件（hiberfil.sys） · OEM 预装软件 · Package Cache · DISM ResetBase<br>（默认不选，需手动添加，操作前有详细风险说明） |
+
+> **macOS 额外支持**：Safari · Homebrew · Xcode DerivedData / Archives / Simulator 缓存 · iOS 本地备份 · Time Machine 本地快照
+
+---
+
+## 安全承诺
+
+| 保证 | 说明 |
+|------|------|
+| 🚫 绝不动用户数据 | 聊天记录、收到的文件、书签、密码、桌面、文档 **一律不碰** |
+| 👁 删前完整展示 | 所有待清理路径在确认前完整呈现，无任何隐式操作 |
+| 🔢 真实数字 | 清理前后实际读磁盘，不估算、不夸大 |
+| 🎛 可精细控制 | 支持单项排除（`C1 C2`）、单项添加（`+F1`）、跳过某项授权（`-A3`） |
+| 🔍 动态适配 | 扫描结果完全基于当前机器，没装的软件不出现在清单里 |
+| ⚡ 一次授权 | Windows 只弹一次 UAC，macOS 只弹一次密码框，全程不重复打扰 |
+
+---
+
+## 安装（30 秒）
+
+**第一步：下载 skill 文件**
+
+点击右上角 `Code → Download ZIP`，或直接下载 `disk-clean.md`。
+
+**第二步：放入 Claude Code 命令目录**
+
+| 系统 | 目录 |
+|------|------|
+| Windows | `C:\Users\你的用户名\.claude\commands\` |
+| macOS / Linux | `~/.claude/commands/` |
+
+> 目录不存在时手动创建即可。
+
+**第三步：重启 Claude Code**
+
+重启后在任意项目中说触发词即可，无需其他配置。
+
+---
+
+## 使用方法
+
+在 Claude Code 的对话框中说任意一句：
+
+```
+清理磁盘    清理C盘    磁盘空间不够    空间不足
+硬盘满了    帮我清理    disk clean    盘快满了
+```
+
+Claude 立即开始扫描，无需任何前置设置。
+
+### 高级用法：自定义清理范围
+
+扫描结果出来后，确认步骤支持以下输入：
+
+| 输入格式 | 含义 | 示例 |
+|----------|------|------|
+| `编号 编号` | 排除这些项，其余正常清理 | `C1 C2`（跳过微信缓存） |
+| `+F编号` | 添加默认不选的可选项 | `+F1`（加上休眠文件） |
+| `-编号` | 跳过某项的授权，不清理该项 | `-A3`（不清理 Prefetch） |
+| 混合使用 | 同时排除和添加 | `C1 +F1 -A3` |
+
+---
+
+## 常见问题
+
+**Q：会删掉我的文件吗？**
+
+不会。只清理可再生的缓存文件（浏览器重新访问网页后会自动重建，大小会慢慢恢复）。聊天记录、收到的文件、书签、密码、桌面、文档一律不动。
+
+**Q：浏览器缓存清了，登录状态会掉吗？**
+
+不会。登录 Cookie 和浏览历史保存在其他位置，不在本 skill 的清理范围内。清理后浏览器打开速度可能略慢一次，属正常现象。
+
+**Q：为什么有些项目标了 ⚑「需管理员」？**
+
+系统临时文件、Windows 更新缓存等位于受保护目录，必须以管理员身份才能删除。本 skill 会把所有需要权限的项目合并成一次 UAC 弹窗（Windows）或一次密码框（macOS），不会反复打扰。
+
+**Q：清理微信缓存会删掉聊天记录吗？**
+
+不会。本 skill 只清理微信的运行时缓存目录（XPlugin、log、radium 等），聊天记录存储在完全不同的路径，不在清理范围内。
+
+**Q：F 类可选项（如休眠文件）有什么风险？**
+
+- `休眠文件`：关闭后电脑无法从休眠状态唤醒（睡眠不受影响），适合不用休眠功能的用户
+- `Package Cache`：删除后已安装软件无法修复或卸载，确认不需要修复功能再删
+- 这些项目默认不选，添加时 Claude 会再次说明风险
+
+**Q：扫描时间很长？**
+
+大型目录（如 Docker 数据卷、Maven 仓库）扫描会稍慢，属正常。扫描期间不会修改任何文件，可以等待。
+
+**Q：支持 Linux 吗？**
+
+目前仅支持 Windows 和 macOS。Linux 支持待后续版本添加。
 
 ---
 
